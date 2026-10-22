@@ -1,0 +1,93 @@
+# =============================================================================
+# Bulletin de surveillance des inondations au Burkina Faso - configuration
+# Relative paths are resolved against the folder containing this file.
+# Settings of one installation (paths, contact...) go in config.local.yaml
+# (same structure, only the keys to change; not versioned): see
+# config.local.example.yaml.
+# =============================================================================
+
+paths:
+  # Root of the FloodProofs outputs (mirror of the CIMA server /data folder).
+  # Default: the example runs shipped with the code (data/example_run).
+  forecast_root: data/example_run
+  # Glob pattern (relative to forecast_root) of the hydrograph JSON files of one
+  # run. {run:<strftime>} is replaced by the run datetime.
+  #   flat folder   : "hydro*_{run:%Y%m%d%H%M}.json"   (exemple_files: hydrogram_<section>_<run>.json)
+  #   server layout : "{run:%m}/{run:%d}/{run:%H}/outcome/collections/deterministic/hydro*_{run:%Y%m%d%H%M}.json"
+  #                   (with forecast_root = the mirrored /data folder)
+  forecast_pattern: "hydro*_{run:%Y%m%d%H%M}.json"
+
+  static_data: data/static             # FloodProofs/Continuum static layers of the BFA domain
+  sections: bfa_sections_final.shp     # reporting points (HMC_X = row, HMC_Y = col, 1-based)
+  rivers: river_FP_clip.shp            # river network, one reach per section ("section" field)
+  pnt: burkinafaso.pnt.txt             # Continuum drainage directions (ASCII grid)
+  area: burkinafaso.area.txt           # drained area (number of upstream cells, ASCII grid)
+
+  geodata_dir: data/geo                # Natural Earth / GeoNames layers (python make_bulletin.py --prepare-geodata)
+  cache_dir: cache                     # basin polygons etc.
+  output_dir: output                   # one sub-folder per bulletin
+  logos_dir: assets/logos
+
+bulletin:
+  title: "Bulletin de surveillance des inondations au Burkina Faso"
+  organisation: "Direction Générale des Ressources en Eau (DGRE)"
+  issue_time: "10:00"                  # local time printed on the bulletin
+  issue_weekdays: [0, 3]               # 0 = lundi, 3 = jeudi
+  n_days: 5                            # forecast horizon shown (days, starting on the issue day)
+  run_hour: 0                          # FloodProofs run hour (UTC) used for the bulletin
+  max_run_lookback_days: 3             # if today's run is missing, use an older run
+  season_start: 2026-01-01             # bulletin numbering: n-th Monday/Thursday since this date
+  contact: "DGRE - Service de l'Hydrologie - Tél. : +226 XX XX XX XX - email : hydrologie@dgre.bf"
+  footer_note: "Bulletin produit à partir de la chaîne de prévision FloodProofs (Fondation CIMA) - DGRE / AICS."
+
+models:
+  # Key in the JSON (time_series_discharge_simulated-<key>) -> display name.
+  # Order = drawing order and legend order.
+  names:
+    gfs: "GFS"
+    ecmwf: "ECMWF IFS"
+    ecmwfAIFS: "ECMWF AIFS"
+    icon: "ICON"
+    wrf-bf: "WRF-BF"
+  # A vigilance level is retained for a section/day when at least `min_models`
+  # of the available models reach it (1 = most pessimistic model).
+  # Capped by the number of models actually available for the section.
+  min_models: 1
+
+# Vigilance levels: 0 = pas d'alerte, 1 = thr_alert, 2 = thr_alarm, 3 = thr_emergency
+levels:
+  colors:   ["#3a9d3a", "#f2d21b", "#f08c1a", "#d7191c"]
+  nodata_color: "#b8b8b8"
+  labels:   ["Pas de vigilance", "Vigilance faible", "Vigilance modérée", "Vigilance marquée"]
+  short:    ["VERT", "JAUNE", "ORANGE", "ROUGE"]
+  impacts:
+    - "Pas de débordement attendu. Situation normale pour la saison."
+    - "Montée des eaux pouvant provoquer des débordements localisés de faible ampleur. Restez attentifs, notamment près des cours d'eau et des radiers."
+    - "Crue importante possible : débordements affectant des zones habitées, des cultures et des routes. Coupures de radiers probables. Suivez les consignes des autorités."
+    - "Crue majeure possible : inondations étendues, menace pour les vies humaines et les biens, dégâts importants aux infrastructures. Évacuations possibles."
+
+# FFGS (Flash Flood Guidance System) background of the main map.
+# Not yet available operationally: keep `enabled: false`.
+# `file` may be a vector file (shp/gpkg/geojson) with an integer field
+# `level_field` (0..3) or a single-band raster (GeoTIFF) of levels 0..3.
+# Use file: demo to draw a synthetic demonstration layer.
+ffgs:
+  enabled: false
+  file: null
+  level_field: level
+  colors: ["#a9c4a0", "#f3f0a8", "#f4cf9a", "#e9a8a3"]
+  labels: ["Pas d'alerte", "Vigilance faible", "Vigilance modérée", "Vigilance marquée"]
+
+maps:
+  dpi: 200
+  land_color: "#b9bcb6"                # Burkina Faso fill (region borders drawn in white)
+  label_cities_national: 12            # number of main towns labelled on the national map
+  label_places_zoom: 25                # number of towns/villages labelled on a zoom map
+  show_villages_zoom: true             # small grey dots for all villages inside the zoom basin
+  zoom_margin_deg: 0.25
+  # Background drainage network derived from the PNT + area rasters (zoom maps):
+  # cells draining at least this many cells (1 cell ~ 3.4 km2) are drawn in blue.
+  network_min_cells: 15
+
+# Focus (zoom) pages: see focus_stations.yaml
+focus_file: focus_stations.yaml

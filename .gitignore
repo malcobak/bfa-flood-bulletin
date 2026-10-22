@@ -1,0 +1,17 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Installation-specific settings and secrets
+config.local.yaml
+webapp/users.txt
+
+# Generated
+output/
+cache/
+*.tmp
+*.tmp.png
+
+# OS
+.DS_Store

@@ -1,0 +1,17 @@
+# =============================================================================
+# Texte du prévisionniste (optionnel) - passer avec : --notes notes.yaml
+# Les champs absents ou vides sont remplacés par le texte généré automatiquement.
+# =============================================================================
+
+# Message principal affiché sous la carte nationale (remplace le texte automatique)
+summary: ""
+
+# Ajouté sous le texte automatique (ex. contexte météo, état des barrages)
+additional: ""
+
+# Texte pour les crues soudaines / FFGS
+flash_floods: ""
+
+# Commentaires par zone de focus (clé = SEC_NAME) ; complète "comment" de focus_stations.yaml
+zones: {}
+#  Mouhoun_Dapola: "Débit en hausse régulière, pic attendu jeudi."

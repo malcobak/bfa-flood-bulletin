@@ -1,0 +1,23 @@
+# =============================================================================
+# Settings of THIS installation - copy to config.local.yaml and adapt.
+# Only the keys written here replace those of config.yaml.
+# config.local.yaml is not versioned (.gitignore).
+# =============================================================================
+
+paths:
+  # Mirror of the CIMA server /data folder (see docs/installation.md, "Données FloodProofs")
+  forecast_root: /srv/floodproofs/data
+  forecast_pattern: "{run:%m}/{run:%d}/{run:%H}/outcome/collections/deterministic/hydro*_{run:%Y%m%d%H%M}.json"
+  # or a flat folder of hydrogram_<section>_<YYYYmmddHHMM>.json files:
+  # forecast_root: /srv/floodproofs/hydrographs
+  # forecast_pattern: "hydro*_{run:%Y%m%d%H%M}.json"
+
+  # output_dir: /srv/bulletins          # where bulletins are written (default: output/)
+
+bulletin:
+  contact: "DGRE - Service de l'Hydrologie - Tél. : +226 XX XX XX XX - email : hydrologie@dgre.bf"
+  # season_start: 2026-06-01           # bulletin numbering
+
+# ffgs:
+#   enabled: true
+#   file: /srv/ffgs/ffgs_latest.gpkg

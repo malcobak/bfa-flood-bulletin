@@ -1,0 +1,20 @@
+/* On-screen preview of the bulletin (the PDF uses bulletin.css only):
+   A4 sheets on a grey background, editable blocks highlighted. */
+html { background: #e3e6ea; }
+body { padding: 18px 0 40px; margin: 0; }
+.footer { display: none; }
+.page { width: 210mm; min-height: 297mm; padding: 11mm 12mm 21mm; margin: 0 auto 18px; background: #fff;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, .18); page-break-after: auto; position: relative; }
+.page::after { content: attr(data-label); position: absolute; right: 12mm; bottom: 8mm; font-size: 7pt; color: #999; }
+
+body.edit [data-edit] { border-radius: 2px; cursor: text; outline: 1px dashed transparent; outline-offset: 1px;
+                        transition: outline-color .15s, background-color .15s; }
+body.edit [data-edit]:hover { outline-color: #1f5f99; background-color: rgba(31, 95, 153, .06); }
+body.edit [data-edit]:focus { outline: 2px solid #1f5f99; background-color: #fff; }
+body.edit [data-edit]:empty::before { content: attr(data-ph); color: #9aa1a8; font-style: italic; }
+body.edit .comment:empty, body.edit .additional:empty { background: transparent; border-left-color: #ddd; }
+body.edit tr[data-section] { cursor: pointer; }
+body.edit tr[data-section]:hover td:not(.lv) { background: #eef4fa; }
+body.edit .zonemap, body.edit .hydro, body.edit .mainmap, body.edit [data-image] { cursor: pointer; }
+body.edit .zonemap:hover, body.edit .hydro:hover, body.edit .mainmap:hover, body.edit [data-image]:hover {
+  outline: 1px dashed #1f5f99; outline-offset: 2px; }

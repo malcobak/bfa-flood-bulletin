@@ -1,0 +1,33 @@
+# =============================================================================
+# Zones de focus ("zoom") : une page détaillée par zone.
+# Par défaut aucune zone (zones: []).
+#
+# Chaque zone :
+#   section            : SEC_NAME du point de rapport exutoire de la zone
+#                        (liste : python make_bulletin.py --list-sections)
+#   title              : titre de la page (optionnel, défaut = rivière à station)
+#   extra_hydrographs  : autres points de rapport dont on veut aussi l'hydrogramme (optionnel, max 2)
+#   comment            : texte libre du prévisionniste (optionnel)
+#   margin_deg         : marge autour du bassin pour la carte (optionnel)
+#
+# Les zones peuvent aussi être données en ligne de commande :
+#   python make_bulletin.py --focus Mouhoun_Dapola --focus Pendjari_Arly
+# =============================================================================
+
+zones: []
+
+# Exemple :
+# zones:
+#   - section: Mouhoun_Dapola
+#     title: "Mouhoun supérieur jusqu'à Dapola"
+#     extra_hydrographs: [Mouhoun_Boromo, Sourou_Yaran]
+#     comment: "Montée lente attendue sur le Mouhoun, sans dépassement de seuil."
+#   - section: Pendjari_Arly
+#     title: "Pendjari à Arly"
+
+# Sélection automatique (en plus des zones ci-dessus) des points de rapport
+# les plus menacés : un point par bassin, de l'aval vers l'amont.
+auto:
+  enabled: false
+  min_level: 2        # 1 = jaune, 2 = orange, 3 = rouge
+  max_zones: 4

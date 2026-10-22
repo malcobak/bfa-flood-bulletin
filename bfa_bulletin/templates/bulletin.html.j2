@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>{{ b.title }} - {{ number }}</title>
+<link rel="stylesheet" href="{{ css }}">
+</head>
+<body{% if edit %} class="edit"{% endif %}>
+
+{# Editable text block: txt(key) = forecaster text, or the automatic default.
+   In the web editor the block carries data-edit so that it can be edited in place. #}
+{% macro ed(key, tag="span", cls="", ph="Cliquer pour écrire…") -%}
+<{{ tag }}{% if cls %} class="{{ cls }}"{% endif %}{% if edit %} data-edit="{{ key }}" data-ph="{{ ph }}"{% endif %}>{{ txt(key)|nl2br }}</{{ tag }}>
+{%- endmacro %}
+{% macro edz(z, field, tag="span", cls="", ph="Cliquer pour écrire…") -%}
+<{{ tag }}{% if cls %} class="{{ cls }}"{% endif %}{% if edit %} data-edit="zone.{{ z.section }}.{{ field }}" data-ph="{{ ph }}"{% endif %}>{{ z[field]|nl2br }}</{{ tag }}>
+{%- endmacro %}
+{% macro imgs(place) -%}
+{% for im in images.get(place, []) %}
+<figure class="xim" style="width: {{ im.width or 100 }}%"{% if edit %} data-image="{{ im.id }}"{% endif %}>
+  <img src="{{ up }}/{{ im.file }}">
+  {% if im.caption %}<figcaption>{{ im.caption }}</figcaption>{% endif %}
+</figure>
+{% endfor %}
+{%- endmacro %}
+
+<div class="footer">
+  <img src="{{ logos }}/dgre_round.png" alt="DGRE">
+  <div class="mid">{{ b.title }} - Numéro {{ number }}<br><span class="pg"></span></div>
+  <div><img src="{{ logos }}/aics.png" alt="AICS"><img src="{{ logos }}/cima.png" alt="CIMA"></div>
+</div>
+
+{% macro header(subtitle, compact=True, key=None) %}
+<div class="header{% if compact %} compact{% else %} first{% endif %}">
+  <div>
+    <h1>{{ b.title }}</h1>
+    {% if key %}{{ ed(key, "div", "when") }}{% else %}<div class="when">{{ subtitle }}</div>{% endif %}
+    <div class="meta">Émis le {{ issue_str }} à {{ issue_time }} - Valable du {{ valid_from }} au {{ valid_to }}
+      - <span class="number">Numéro {{ number }}</span></div>
+  </div>
+  <img src="{{ logos }}/dgre_header.png" alt="DGRE">
+</div>
+{% endmacro %}
+
+{# ============================== PAGE 1 ============================== #}
+<div class="page" data-page="p1">
+  {{ header("", compact=False, key="subtitle") }}
+  {% if run_late %}<p class="warn">Attention : la prévision du jour n'était pas disponible ; ce bulletin utilise le run FloodProofs du {{ run_str }}.</p>{% endif %}
+
+  <img class="mainmap" src="{{ fig }}/{{ national }}" style="width: {{ L.main_map_width }}mm">
+
+  <div class="summary" style="border-left-color: {{ overall|lc }}">
+    {{ ed("headline", "div", "headline") }}
+    {% if n_parts %}<ul>{% for i in range(n_parts) %}{% if edit or txt("part." ~ i) %}{{ ed("part." ~ i, "li") }}{% endif %}{% endfor %}</ul>{% endif %}
+    {% if edit or txt("additional") %}{{ ed("additional", "p", "additional", "Texte complémentaire (contexte météo, barrages…) - cliquer pour écrire") }}{% endif %}
+  </div>
+
+  {{ imgs("page1") }}
+
+  {% if L.show_days %}
+  <div class="days" style="margin-top:3mm">
+    {% for c in cards %}
+    <div class="day">
+      <div class="dname">{{ c.label }}</div>
+      <div class="ddate">{{ c.date_str }}</div>
+      <img src="{{ fig }}/{{ c.map }}">
+      <div class="lvl" style="background: {{ c.level|lc }}; {% if c.level in [0, 3] %}color: white;{% endif %}">
+        {% if c.level >= 0 %}{{ levels.labels[c.level] }}{% else %}Pas de données{% endif %}
+      </div>
+      <div class="trend"><span class="lab">Tendance depuis le dernier bulletin</span>
+        {% if c.arrow %}<span class="arrow">{{ c.arrow }}</span> {% endif %}{{ c.trend }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+{# ============================== PAGE 2 : assessment ============================== #}
+<div class="page" data-page="p2">
+  {{ header("Évaluation du risque d'inondation") }}
+
+  <h2>Évaluation du risque</h2>
+  <div class="assess" style="border-left: 2.5mm solid {{ overall|lc }}">
+    <div class="t">Crues fluviales</div>
+    {{ ed("river_risk", "p") }}
+    <p class="small muted">{{ n_sections }} points de rapport analysés - modèles météorologiques : {{ models|join(", ") }}
+      - run FloodProofs du {{ run_str }}.</p>
+  </div>
+  <div class="assess">
+    <div class="t">Crues soudaines (FFGS)</div>
+    {{ ed("ffgs_text", "p", "" if ffgs else "muted") }}
+    {% if ffgs_demo %}<p class="warn">Données de démonstration - ne pas diffuser.</p>{% endif %}
+    {% if edit or txt("flash") %}{{ ed("flash", "p", "", "Texte du prévisionniste sur les crues soudaines - cliquer pour écrire") }}{% endif %}
+  </div>
+
+  {% if L.show_alert_table %}
+  <h2>Points de rapport en vigilance</h2>
+  {% if alert_rows %}
+  <table>
+    <thead><tr>
+      <th>Cours d'eau</th><th>Point de rapport</th><th>Région / Province</th><th class="r">Superficie (km²)</th>
+      {% for c in cards %}<th class="c">{{ c.label[:3] }}.<br>{{ c.date.strftime('%d/%m') }}</th>{% endfor %}
+      <th class="r">Q max (m³/s)</th><th class="r">Seuil (m³/s)</th><th class="c">Modèles</th>
+    </tr></thead>
+    <tbody>
+    {% for r in alert_rows %}
+      <tr{% if edit %} data-section="{{ r.section }}"{% endif %}>
+        <td><b>{{ r.river }}</b></td><td>{{ r.place }}</td>
+        <td>{{ r.region }}{% if r.province %} / {{ r.province }}{% endif %}</td><td class="r">{{ r.area }}</td>
+        {% for l in r.days %}<td class="lv" style="background: {{ l|lc }}; {% if l in [0, 3] %}color:white;{% endif %}">{% if l >= 0 %}{{ levels.short[l] }}{% else %}n.d.{% endif %}</td>{% endfor %}
+        <td class="r">{{ r.peak_q }}</td><td class="r">{{ r.thr }}</td><td class="c">{{ r.models }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if n_alert_rows > alert_rows|length %}<p class="small muted" style="margin-top:1mm">… et {{ n_alert_rows - alert_rows|length }} autre(s) point(s) de rapport en vigilance (voir le fichier CSV).</p>{% endif %}
+  {{ ed("alert_note", "p", "small muted alert-note") }}
+  {% else %}
+  {{ ed("no_alert", "p") }}
+  {% endif %}
+  {% endif %}
+
+  {% if zones and L.show_zone_list %}
+  <h2>Zones de focus</h2>
+  <p>{% for z in zones %}<span class="letter">{{ z.letter }}</span>{{ z.title }}{% if not loop.last %} &nbsp; {% endif %}{% endfor %}</p>
+  {{ ed("zones_note", "p", "small muted") }}
+  {% endif %}
+
+  {{ imgs("page2") }}
+</div>
+
+{# ============================== ZONE PAGES ============================== #}
+{% for z in zones %}
+<div class="page" data-page="zone:{{ z.section }}">
+  <div class="header compact">
+    <div>
+      <h1>{{ b.title }}</h1>
+      <div class="when">Carte détaillée de la zone de vigilance {{ z.letter }} - {{ edz(z, "title") }}</div>
+      <div class="meta">Émis le {{ issue_str }} à {{ issue_time }} - Valable du {{ valid_from }} au {{ valid_to }}
+        - <span class="number">Numéro {{ number }}</span></div>
+    </div>
+    <img src="{{ logos }}/dgre_header.png" alt="DGRE">
+  </div>
+  <div class="zonehead">
+    <div class="riskcard" style="border-top-color: {{ z.level|lc }}">
+      <div class="big">ZONE <b>{{ z.letter }}</b></div>
+      <div style="font-size:9.5pt; font-weight:700; margin:1mm 0">
+        {% if z.level >= 0 %}{{ levels.labels[z.level] }}{% else %}Pas de données{% endif %}</div>
+      <div class="small">Débit max prévu : <b>{{ z.peak_q }} m³/s</b><br>
+        le {{ z.peak_time }}{% if z.peak_model %} ({{ z.peak_model }}){% endif %}<br>
+        Modèles au-dessus du seuil jaune : <b>{{ z.models_alert }}/{{ z.n_models }}</b><br>
+        Points de rapport du bassin en vigilance : <b>{{ z.n_up_alert }}/{{ z.n_up }}</b></div>
+    </div>
+    <div class="facts">
+      <table>
+        <tr><td>Cours d'eau / bassin</td><td><b>{{ z.river }}</b>{% if z.basin and z.basin != z.river %} (bassin {{ z.basin }}){% endif %}</td></tr>
+        <tr><td>{{ z.station_type }}</td><td>{{ z.station_label }}</td></tr>
+        <tr><td>Localisation</td><td>{{ z.region }}{% if z.province %} / {{ z.province }}{% endif %}{% if z.commune %} / {{ z.commune }}{% endif %}</td></tr>
+        <tr><td>Superficie drainée</td><td>{{ z.area }} km²</td></tr>
+        {% if z.thr %}<tr><td>Seuils jaune / orange / rouge</td><td>{{ z.thr|join(" / ") }} m³/s</td></tr>{% endif %}
+        <tr><td>Vigilance jour par jour</td><td>
+          {% for l in z.days %}<span style="display:inline-block; width:9mm; text-align:center; font-size:6.5pt; font-weight:700; background: {{ l|lc }}; {% if l in [0, 3] %}color:white;{% endif %} margin-right:0.6mm">{{ cards[loop.index0].label[:3] }}</span>{% endfor %}
+        </td></tr>
+      </table>
+    </div>
+  </div>
+  {% if edit or z.comment %}{{ edz(z, "comment", "div", "comment", "Commentaire du prévisionniste sur cette zone - cliquer pour écrire") }}{% endif %}
+
+  {% set main_h = z.hydros|rejectattr("compact")|list %}
+  {% set zonemap %}<img class="zonemap" src="{{ fig }}/{{ z.map }}">{% endset %}
+  {% if L.zone_layout != "hydro_first" %}{{ zonemap }}{% endif %}
+  {% for h in main_h %}
+    <img class="hydro" src="{{ fig }}/{{ h.file }}">
+    {% if h.table and L.show_zone_table %}
+    <table class="zonetable" style="margin-top:1mm">
+      <thead><tr><th>Débit max journalier (m³/s)</th>{% for c in cards %}<th class="c">{{ c.label }} {{ c.date.strftime('%d/%m') }}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for m in h.table %}
+        <tr><td>{{ m.model }}</td>
+        {% for cell in m.cells %}<td class="c" style="background: {{ cell.level|lc }}{% if cell.level == 0 %}22{% elif cell.level > 0 %}aa{% endif %}">{{ cell.q|q }}</td>{% endfor %}</tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  {% endfor %}
+  {% if L.zone_layout == "hydro_first" %}{{ zonemap }}{% endif %}
+  {% set extras = z.hydros|selectattr("compact")|list %}
+  {% if extras and L.show_extra_hydros %}
+  <div class="extra">{% for h in extras %}<img src="{{ fig }}/{{ h.file }}">{% endfor %}</div>
+  {% endif %}
+  {{ imgs("zone:" ~ z.section) }}
+</div>
+{% endfor %}
+
+{# ============================== ANNEX (extra images) ============================== #}
+{% if images.get("annex") %}
+<div class="page" data-page="annex">
+  {{ header("Informations complémentaires") }}
+  {{ imgs("annex") }}
+</div>
+{% endif %}
+
+{# ============================== GUIDE ============================== #}
+{% if L.show_guide %}
+<div class="page" data-page="guide">
+  {{ header("Guide de lecture") }}
+  <h2>Niveaux de vigilance crues fluviales</h2>
+  <table class="guide">
+    <thead><tr><th class="swatch"></th><th>Niveau</th><th>Critère (débit prévu)</th><th>Impacts possibles</th></tr></thead>
+    <tbody>
+    {% set crit = ["Débit inférieur au seuil d'alerte", "Débit ≥ seuil d'alerte (jaune)", "Débit ≥ seuil d'alarme (orange)", "Débit ≥ seuil d'urgence (rouge)"] %}
+    {% for i in range(4) %}
+      <tr><td style="background: {{ levels.colors[i] }}"></td><td><b>{{ levels.labels[i] }}</b></td><td>{{ crit[i] }}</td>{{ ed("impact." ~ i, "td") }}</tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Méthode</h2>
+  {{ ed("method", "p") }}
+  {{ ed("trend_note", "p") }}
+  {{ ed("flash_note", "p", "muted small") }}
+
+  <h2>Prochain bulletin</h2>
+  {{ ed("next_issue", "p") }}
+  <h2>Contact</h2>
+  {{ ed("contact", "p") }}
+  <p class="small muted">{{ b.footer_note }} Généré le {{ generated }}.
+    Fonds cartographiques : Natural Earth, GeoNames (CC-BY), geoBoundaries (CC-BY).</p>
+</div>
+{% endif %}
+
+</body>
+</html>

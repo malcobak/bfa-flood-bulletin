@@ -1,0 +1,13 @@
+numpy
+pandas
+geopandas>=0.14
+rasterio
+shapely>=2
+matplotlib
+jinja2
+weasyprint
+pyyaml
+# web application (webapp/)
+fastapi
+uvicorn[standard]
+python-multipart

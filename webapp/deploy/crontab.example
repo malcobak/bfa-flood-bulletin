@@ -1,0 +1,6 @@
+# Example crontab of the server (crontab -e). Adapt the paths.
+# 1) Mirror the FloodProofs outputs from the CIMA server every hour (SFTP key authentication,
+#    see docs/installation.md). The key must not need an interactive passphrase (or use ssh-agent).
+15 * * * *  lftp -u USER, sftp://SERVER -e "mirror --only-newer --parallel=4 /data /srv/floodproofs/data; bye" >> /var/log/floodproofs_mirror.log 2>&1
+# 2) Automatic bulletin on Monday and Thursday at 09:30 (optional: the web application can be used instead)
+30 9 * * 1,4  cd /opt/bfa-flood-bulletin && .venv/bin/python make_bulletin.py >> output/cron.log 2>&1

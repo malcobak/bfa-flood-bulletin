@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Starts the bulletin web application at login and restarts it if it stops.
+     Install:   cp webapp/deploy/org.dgre.bulletin.plist ~/Library/LaunchAgents/
+                launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/org.dgre.bulletin.plist
+     Restart:   launchctl kickstart -k gui/$(id -u)/org.dgre.bulletin
+     Remove:    launchctl bootout gui/$(id -u)/org.dgre.bulletin
+     Logs:      output/webapp.log -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>org.dgre.bulletin</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/mat/Documents/CIMA_RAPIDE/bulletins/bulletin_bfa/run_webapp.sh</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/mat/Documents/CIMA_RAPIDE/bulletins/bulletin_bfa</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/Users/mat/Documents/CIMA_RAPIDE/bulletins/bulletin_bfa/output/webapp.log</string>
+  <key>StandardErrorPath</key><string>/Users/mat/Documents/CIMA_RAPIDE/bulletins/bulletin_bfa/output/webapp.log</string>
+</dict>
+</plist>

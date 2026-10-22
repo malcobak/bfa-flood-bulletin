@@ -1,0 +1,20 @@
+# systemd unit (Linux server) - starts the web application at boot and restarts it on failure.
+# Adapt User and the paths (/opt/bfa-flood-bulletin), then:
+#   sudo cp webapp/deploy/bulletin-web.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now bulletin-web
+#   journalctl -u bulletin-web -f          # logs
+[Unit]
+Description=Bulletin inondations Burkina Faso - application web
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=bulletin
+WorkingDirectory=/opt/bfa-flood-bulletin
+ExecStart=/opt/bfa-flood-bulletin/run_webapp.sh
+Environment=BULLETIN_PORT=8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

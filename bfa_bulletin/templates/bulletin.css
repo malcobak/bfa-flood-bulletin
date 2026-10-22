@@ -1,0 +1,105 @@
+@font-face { font-family: "Fira Sans"; font-weight: 300; font-style: normal; src: url("../../assets/fonts/FiraSans-Light.ttf"); }
+@font-face { font-family: "Fira Sans"; font-weight: 400; font-style: normal; src: url("../../assets/fonts/FiraSans-Regular.ttf"); }
+@font-face { font-family: "Fira Sans"; font-weight: 400; font-style: italic; src: url("../../assets/fonts/FiraSans-Italic.ttf"); }
+@font-face { font-family: "Fira Sans"; font-weight: 500; font-style: normal; src: url("../../assets/fonts/FiraSans-Medium.ttf"); }
+@font-face { font-family: "Fira Sans"; font-weight: 600; font-style: normal; src: url("../../assets/fonts/FiraSans-SemiBold.ttf"); }
+@font-face { font-family: "Fira Sans"; font-weight: 700; font-style: normal; src: url("../../assets/fonts/FiraSans-Bold.ttf"); }
+@page {
+  size: A4;
+  margin: 11mm 12mm 21mm 12mm;
+  @bottom-center { content: element(footer); width: 100%; }
+}
+* { box-sizing: border-box; }
+body { font-family: "Fira Sans", "DejaVu Sans", Arial, sans-serif; font-size: 9pt;
+       color: #000; line-height: 1.35; margin: 0; }
+h1 { font-size: 20pt; margin: 0; font-weight: 400; color: #000; line-height: 1.1; }
+h2 { font-size: 10.5pt; margin: 3.5mm 0 1.8mm 0; color: #000; font-weight: 700; }
+h3 { font-size: 9pt; margin: 2mm 0 1mm 0; color: #000; }
+p { margin: 0 0 1.6mm 0; }
+.page { page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+
+/* ---------- header (FGS-like) */
+.header { display: flex; justify-content: space-between; align-items: flex-start;
+          border-bottom: 2px solid #000; padding-bottom: 2mm; }
+.header .when { font-size: 12pt; margin-top: 1mm; }
+.header.first { border-bottom: none; padding-bottom: 1mm; }
+.header .meta { font-size: 8.5pt; color: #000; margin-top: 0.6mm; }
+.header img { height: 12mm; }
+.header.compact { padding-bottom: 1.2mm; }
+.header.compact h1 { font-size: 11pt; }
+.header.compact .when { font-size: 11pt; font-weight: 700; color: #000; margin-top: 0.6mm; }
+.header.compact img { height: 8.5mm; }
+.number { font-weight: 700; color: #000; }
+.warn { color: #a3261b; font-weight: 600; }
+
+/* ---------- main map */
+.mainmap { width: 168mm; display: block; margin: 1mm auto 0 auto; }
+
+/* ---------- summary box (coloured left band = overall level) */
+.summary { border-left: 5mm solid #999; background: #f4f5f6; padding: 2.2mm 3mm; margin-top: 2.4mm; }
+.summary .headline { font-size: 10pt; font-weight: 600; margin-bottom: 1mm; }
+.summary ul { margin: 0.5mm 0 0 0; padding-left: 4mm; }
+.summary li { margin-bottom: 0.6mm; }
+.risk { font-weight: 800; }
+
+/* ---------- 5-day strip */
+.days { display: flex; gap: 1.6mm; }
+.day { flex: 1; border-left: 0.6pt solid #9a9a9a; padding-left: 1.6mm; }
+.day:first-child { border-left: none; padding-left: 0; }
+.day img { width: 100%; display: block; }
+.day .dname { font-weight: 400; font-size: 12pt; padding: 0 1.4mm 0 0; }
+.day .ddate { font-size: 8.5pt; color: #000; padding: 0 0 1mm 0; }
+.day .lvl { font-size: 7.2pt; font-weight: 700; padding: 0.8mm 1.4mm; color: #000; }
+.day .trend { font-size: 9pt; padding: 0.8mm 0 0 0; color: #000; }
+.day .trend .lab { color: #666; display: block; font-size: 6.4pt; }
+.arrow { font-size: 9pt; font-weight: 700; }
+
+/* ---------- tables */
+table { border-collapse: collapse; width: 100%; font-size: 7.6pt; }
+th { background: #000; color: white; font-weight: 600; padding: 1.2mm 1.2mm; text-align: left; }
+td { padding: 0.9mm 1.2mm; border-bottom: 0.4pt solid #ddd; vertical-align: middle; }
+td.c, th.c { text-align: center; }
+td.r, th.r { text-align: right; }
+td.lv { width: 11mm; text-align: center; font-weight: 700; font-size: 6.6pt; border: 1pt solid white; }
+thead { display: table-header-group; }
+tr { page-break-inside: avoid; }
+
+/* ---------- assessment blocks */
+.assess { border: 0.4pt solid #cfcfcf; padding: 2mm 3mm; margin-bottom: 2.5mm; }
+.assess .t { font-weight: 700; font-size: 9.5pt; color: #000; }
+.muted { color: #666; }
+.small { font-size: 7.4pt; }
+
+/* ---------- zone pages */
+.zonehead { display: flex; gap: 3mm; margin: 1.5mm 0; }
+.zonetable td { padding: 0.6mm 1.2mm; }
+.riskcard { width: 58mm; background: #f0f0f0; padding: 2mm 2.5mm; border-top: 3mm solid #999; }
+.riskcard .big { font-size: 13pt; font-weight: 300; }
+.riskcard .big b { font-weight: 800; }
+.facts { flex: 1; font-size: 7.8pt; }
+.facts table td { padding: 0.55mm 1mm; border-bottom: 0.3pt solid #e3e3e3; }
+.facts table td:first-child { color: #000; width: 36%; }
+.zonemap { width: 100%; display: block; }
+.hydro { width: 100%; display: block; margin-top: 1.5mm; }
+.extra { display: flex; gap: 2mm; }
+.extra img { width: 50%; }
+.comment { background: #fff8e6; border-left: 1.2mm solid #f0b429; padding: 1.5mm 2.5mm; margin: 1.5mm 0; }
+.letter { display: inline-block; width: 6.2mm; height: 6.2mm; border: 1.2pt solid #000; border-radius: 50%;
+          text-align: center; font-weight: 800; line-height: 5.9mm; margin-right: 1.5mm; }
+
+/* ---------- guide */
+.guide td { padding: 1.6mm 2mm; }
+.swatch { width: 14mm; }
+
+/* ---------- footer */
+.footer { position: running(footer); display: flex; align-items: center; justify-content: space-between;
+          border-top: 0.6pt solid #000; padding-top: 1.5mm; font-size: 7pt; color: #000; width: 186mm; }
+.footer .mid { text-align: center; font-style: italic; flex: 1; }
+.footer img { height: 9mm; margin-left: 2mm; }
+.footer .pg::after { content: "Page " counter(page) " / " counter(pages); }
+
+/* ---------- extra images added by the forecaster */
+.xim { display: block; margin: 2mm auto; page-break-inside: avoid; }
+.xim img { width: 100%; display: block; }
+.xim figcaption { font-size: 7.4pt; color: #444; font-style: italic; margin-top: 0.8mm; }

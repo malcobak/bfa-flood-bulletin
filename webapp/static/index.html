@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Éditeur de bulletin - Inondations BFA</title>
+<link rel="icon" href="/pkg/assets/logos/dgre_round.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="top">
+  <img src="/pkg/assets/logos/dgre_round.png" alt="" class="logo">
+  <div class="brand">Bulletin inondations <span>éditeur</span></div>
+  <div class="open">
+    <label>Date d'émission <input type="date" id="issue"></label>
+    <button id="btnOpen" class="primary">Ouvrir</button>
+    <select id="recent" title="Bulletins existants"><option value="">Bulletins existants…</option></select>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="actions">
+    <button id="btnRefresh" title="Recalculer l'aperçu">↻ Aperçu</button>
+    <button id="btnExport" class="primary">Générer le PDF</button>
+  </div>
+  <div class="user" id="user"></div>
+</header>
+
+<main>
+  <aside class="panel" id="panel">
+    <nav class="tabs">
+      <button data-tab="params" class="active">Paramètres</button>
+      <button data-tab="zones">Zones</button>
+      <button data-tab="texts">Textes</button>
+      <button data-tab="layout">Mise en page</button>
+      <button data-tab="images">Images</button>
+      <button data-tab="export">Export</button>
+    </nav>
+
+    <div class="empty" id="empty">
+      <h3>Aucun bulletin ouvert</h3>
+      <p>Choisissez une date d'émission puis <b>Ouvrir</b>. Si le bulletin n'existe pas encore, il est créé
+        automatiquement à partir du dernier run FloodProofs disponible.</p>
+      <div id="runsInfo" class="muted small"></div>
+    </div>
+
+    <!-- ===================== PARAMÈTRES ===================== -->
+    <section class="tab" id="tab-params">
+      <div class="card" id="runSummary"></div>
+      <h4>Bulletin</h4>
+      <div class="grid2">
+        <label>Numéro <input id="o-number"></label>
+        <label>Heure d'émission <input id="o-issue_time" placeholder="10:00"></label>
+      </div>
+      <label>Run FloodProofs
+        <select id="o-force_run"><option value="">Automatique (le plus récent ≤ date d'émission)</option></select>
+      </label>
+      <h4>Prévision</h4>
+      <div class="field">Modèles météorologiques utilisés
+        <div id="o-models" class="checks"></div>
+      </div>
+      <label>Niveau retenu si atteint par au moins
+        <span class="inline"><input id="o-min_models" type="number" min="1" max="9" style="width:4em"> modèle(s)</span>
+        <small>1 = modèle le plus pessimiste</small>
+      </label>
+      <h4>Crues soudaines (fond FFGS)</h4>
+      <label><select id="o-ffgs">
+        <option value="">Aucun</option>
+        <option value="demo">Démonstration (données fictives)</option>
+        <option value="file" id="ffgsFileOpt" disabled>Fichier importé</option>
+      </select></label>
+      <label class="file">Importer un fichier FFGS (gpkg / geojson avec champ <code>level</code> 0-3, ou GeoTIFF)
+        <input type="file" id="ffgsUpload" accept=".gpkg,.geojson,.json,.tif,.tiff,.zip"></label>
+      <h4>Cartes et graphiques</h4>
+      <div class="grid2">
+        <label>Villes nommées (carte nationale) <input id="o-label_cities_national" type="number" min="0" max="40"></label>
+        <label>Lieux nommés (cartes zoom) <input id="o-label_places_zoom" type="number" min="0" max="80"></label>
+        <label>Marge autour du bassin (°) <input id="o-zoom_margin_deg" type="number" step="0.05" min="0" max="2"></label>
+        <label>Réseau de drainage (cellules min.) <input id="o-network_min_cells" type="number" min="1" max="500"></label>
+        <label>Jours de simulation passée (hydrogrammes) <input id="o-past_days" type="number" min="1" max="30" placeholder="tous"></label>
+      </div>
+      <label class="check"><input type="checkbox" id="o-show_villages_zoom"> Afficher les villages dans les bassins zoomés</label>
+      <div class="row">
+        <button id="btnResetOptions" class="ghost">Revenir aux valeurs de config.yaml</button>
+        <button id="btnReload" class="ghost" title="Relire les fichiers FloodProofs (nouveaux runs)">Relire les données</button>
+      </div>
+      <div class="row danger">
+        <button id="btnRecreate" class="ghost">Recréer le bulletin automatique…</button>
+      </div>
+    </section>
+
+    <!-- ===================== ZONES ===================== -->
+    <section class="tab" id="tab-zones">
+      <p class="small muted">Cliquez sur un point de rapport de la carte pour l'ajouter comme zone de focus (page
+        détaillée) ou comme hydrogramme complémentaire d'une zone. Couleur = niveau maximal sur les 5 jours.</p>
+      <div id="map"></div>
+      <div class="legend" id="mapLegend"></div>
+      <div class="row">
+        <input id="secSearch" list="secList" placeholder="Rechercher un point de rapport…" style="flex:1">
+        <datalist id="secList"></datalist>
+        <button id="btnAddSec">Ajouter</button>
+      </div>
+      <div class="card auto">
+        <b>Sélection automatique</b> : points les plus menacés (un par bassin)
+        <div class="row">
+          <label class="inline">niveau ≥ <select id="autoLevel">
+            <option value="1">jaune</option><option value="2">orange</option><option value="3">rouge</option></select></label>
+          <label class="inline">max <input id="autoMax" type="number" min="1" max="10" value="4" style="width:3.5em"></label>
+          <button id="btnSuggest">Proposer</button>
+        </div>
+      </div>
+      <h4>Zones de focus <span class="muted small" id="zoneCount"></span></h4>
+      <div id="zoneList"></div>
+    </section>
+
+    <!-- ===================== TEXTES ===================== -->
+    <section class="tab" id="tab-texts">
+      <p class="small muted">Vous pouvez aussi cliquer directement sur un texte de l'aperçu pour le modifier. Les textes
+        automatiques sont recalculés à chaque changement de prévision tant qu'ils n'ont pas été modifiés
+        (bouton <b>↺</b> pour revenir au texte automatique).</p>
+      <div id="textList"></div>
+    </section>
+
+    <!-- ===================== MISE EN PAGE ===================== -->
+    <section class="tab" id="tab-layout">
+      <h4>Page 1</h4>
+      <label>Largeur de la carte nationale : <b id="mainMapW"></b> mm
+        <input type="range" id="l-main_map_width" min="110" max="186" step="2"></label>
+      <label class="check"><input type="checkbox" id="l-show_parts"> Liste des points par niveau sous le titre</label>
+      <label class="check"><input type="checkbox" id="l-show_days"> Bandeau des 5 cartes journalières</label>
+      <h4>Page 2</h4>
+      <label class="check"><input type="checkbox" id="l-show_alert_table"> Tableau des points en vigilance</label>
+      <label>Nombre maximal de lignes du tableau <input type="number" id="l-alert_max_rows" min="0" max="200" style="width:5em">
+        <small>0 = toutes</small></label>
+      <label class="check"><input type="checkbox" id="l-show_zone_list"> Liste des zones de focus</label>
+      <h4>Pages des zones</h4>
+      <div class="field">Ordre des éléments
+        <div class="checks">
+          <label class="check"><input type="radio" name="zone_layout" value="map_first"> Carte puis hydrogramme</label>
+          <label class="check"><input type="radio" name="zone_layout" value="hydro_first"> Hydrogramme puis carte</label>
+        </div>
+      </div>
+      <div class="grid2">
+        <label>Hauteur de la carte
+          <select id="l-zone_map_height">
+            <option value="3.2">Petite</option><option value="3.95">Normale</option>
+            <option value="4.8">Grande</option><option value="5.6">Très grande</option></select></label>
+        <label>Hauteur de l'hydrogramme
+          <select id="l-hydro_height">
+            <option value="2.2">Petite</option><option value="2.6">Normale</option>
+            <option value="3.2">Grande</option><option value="3.8">Très grande</option></select></label>
+      </div>
+      <label class="check"><input type="checkbox" id="l-show_zone_table"> Tableau des débits journaliers par modèle</label>
+      <label class="check"><input type="checkbox" id="l-show_extra_hydros"> Hydrogrammes complémentaires</label>
+      <h4>Dernière page</h4>
+      <label class="check"><input type="checkbox" id="l-show_guide"> Guide de lecture</label>
+      <div class="row"><button id="btnResetLayout" class="ghost">Mise en page par défaut</button></div>
+    </section>
+
+    <!-- ===================== IMAGES ===================== -->
+    <section class="tab" id="tab-images">
+      <p class="small muted">Ajoutez des images (photo de terrain, image satellite, carte météo…) dans le bulletin.</p>
+      <div class="card">
+        <label class="file">Fichier image (png, jpg, svg…) <input type="file" id="imgFile" accept="image/*"></label>
+        <label>Légende <input id="imgCaption"></label>
+        <div class="grid2">
+          <label>Emplacement <select id="imgPlace" class="placeSel"></select></label>
+          <label>Largeur (%) <input id="imgWidth" type="number" min="20" max="100" value="100"></label>
+        </div>
+        <button id="btnUpload" class="primary">Ajouter l'image</button>
+      </div>
+      <div id="imageList"></div>
+    </section>
+
+    <!-- ===================== EXPORT ===================== -->
+    <section class="tab" id="tab-export">
+      <div id="exportInfo" class="card"></div>
+      <button id="btnExport2" class="primary big">Générer le PDF</button>
+      <p class="small muted">Le PDF, la version HTML et le tableau CSV des niveaux sont écrits dans
+        <code>output/bulletin_AAAAMMJJ/</code>. Le résumé sert à calculer la tendance du bulletin suivant.</p>
+      <h4>Autres bulletins</h4>
+      <div id="bulletinList"></div>
+    </section>
+  </aside>
+
+  <section class="preview">
+    <div class="overlay" id="overlay"><div class="spinner"></div><div id="overlayMsg">Calcul de l'aperçu…</div></div>
+    <iframe id="frame" title="Aperçu du bulletin"></iframe>
+  </section>
+</main>
+<div id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
